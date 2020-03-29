@@ -7,7 +7,7 @@ mod rg;
 #[derive(Debug, Snafu)]
 #[snafu(visibility = "pub")]
 pub enum Error {
-    #[snafu(display("rg failed"))]
+    #[snafu(display("rg failed: {}", source))]
     RgError { source: rg::Error },
 }
 

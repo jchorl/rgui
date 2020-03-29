@@ -3,7 +3,7 @@ use std::process::Command;
 
 #[derive(Debug, Snafu)]
 pub enum Error {
-    #[snafu(display("Command '{}' failed", command))]
+    #[snafu(display("Command '{}' failed: {}", command, source))]
     CommandError {
         command: String,
         source: std::io::Error,
@@ -21,10 +21,10 @@ pub enum Error {
         stderr: String,
     },
 
-    #[snafu(display("Results not UTF-8"))]
+    #[snafu(display("Results not UTF-8: {}", source))]
     NonUtf8Results { source: std::string::FromUtf8Error },
 
-    #[snafu(display("Failed to parse"))]
+    #[snafu(display("Failed to parse: {}", source))]
     ResultsParseError { source: serde_json::error::Error },
 }
 
