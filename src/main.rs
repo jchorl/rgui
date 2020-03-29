@@ -1,37 +1,23 @@
-use serde::Deserialize;
-use snafu::{ensure, ErrorCompat, ResultExt};
+use snafu::{ErrorCompat, ResultExt, Snafu};
 use std::env;
-use std::process::Command;
 
-mod errors;
+mod rg;
 
-type Result<T, E = errors::Error> = std::result::Result<T, E>;
-
-#[derive(Debug, PartialEq, Eq, Deserialize)]
-enum RipGrepLine {
-    Match {line_number: i32},
+#[derive(Debug, Snafu)]
+#[snafu(visibility = "pub")]
+pub enum Error {
+    #[snafu(display("rg failed"))]
+    RgError {
+        source: rg::errors::Error,
+    }
 }
 
+type Result<T, E = Error> = std::result::Result<T, E>;
+
 fn run_app() -> Result<()> {
-    let grep_cmd = "rg";
-    let args: Vec<String> = env::args().collect();
-    let mut grep_args_builder: Vec<String> = args[1..].iter().cloned().collect();
-    grep_args_builder.push("--json".to_string());
-    let grep_args = &*grep_args_builder;
+    let unparsed = rg::run_rg(env::args().collect())
+        .context(RgError {})?;
 
-    let output = Command::new(grep_cmd)
-        .args(grep_args)
-        .output()
-        .context(errors::CommandError { command: grep_cmd })?;
-
-    ensure!(output.status.success(), errors::CommandResultError {
-        command: grep_cmd,
-        args: grep_args,
-        stdout: String::from_utf8(output.stdout).unwrap(),
-        stderr: String::from_utf8(output.stderr).unwrap(),
-    });
-
-    let unparsed = String::from_utf8(output.stdout).unwrap();
     for s in unparsed.split("\n") {
         // the last line may be empty
         if s.is_empty() {

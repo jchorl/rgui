@@ -8,6 +8,7 @@ pub enum Error {
         command: String,
         source: std::io::Error,
     },
+
     #[snafu(display("Command '{} {}' failed:\n\
                     stdout:\n\
                     {}\n\
@@ -19,8 +20,14 @@ pub enum Error {
         stdout: String,
         stderr: String,
     },
+
+    #[snafu(display("Results not UTF-8"))]
+    NonUtf8Results {
+        source: std::string::FromUtf8Error,
+    },
+
     #[snafu(display("Failed to parse"))]
     GrepResultsParseError {
         source: serde_json::error::Error,
-    }
+    },
 }
