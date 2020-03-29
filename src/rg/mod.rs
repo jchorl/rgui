@@ -1,5 +1,5 @@
-use std::process::Command;
 use snafu::{ensure, ResultExt, Snafu};
+use std::process::Command;
 
 #[derive(Debug, Snafu)]
 pub enum Error {
@@ -22,14 +22,10 @@ pub enum Error {
     },
 
     #[snafu(display("Results not UTF-8"))]
-    NonUtf8Results {
-        source: std::string::FromUtf8Error,
-    },
+    NonUtf8Results { source: std::string::FromUtf8Error },
 
     #[snafu(display("Failed to parse"))]
-    ResultsParseError {
-        source: serde_json::error::Error,
-    },
+    ResultsParseError { source: serde_json::error::Error },
 }
 
 #[derive(Debug)]
@@ -55,12 +51,15 @@ fn run_cmd(args: Vec<String>) -> Result<String, Error> {
         .output()
         .context(CommandError { command: grep_cmd })?;
 
-    ensure!(output.status.success(), CommandResultError {
-        command: grep_cmd,
-        args: grep_args,
-        stdout: String::from_utf8(output.stdout).unwrap(),
-        stderr: String::from_utf8(output.stderr).unwrap(),
-    });
+    ensure!(
+        output.status.success(),
+        CommandResultError {
+            command: grep_cmd,
+            args: grep_args,
+            stdout: String::from_utf8(output.stdout).unwrap(),
+            stderr: String::from_utf8(output.stderr).unwrap(),
+        }
+    );
 
     let single_str = String::from_utf8(output.stdout).context(NonUtf8Results {})?;
     Ok(single_str)
@@ -79,7 +78,7 @@ fn parse_results(unparsed: String) -> Result<Vec<Match>, Error> {
 
         // ignore non-matches
         if parsed["type"] != "match" {
-            continue
+            continue;
         }
 
         matches.push(Match {

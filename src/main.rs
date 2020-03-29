@@ -7,16 +7,13 @@ mod rg;
 #[snafu(visibility = "pub")]
 pub enum Error {
     #[snafu(display("rg failed"))]
-    RgError {
-        source: rg::Error,
-    }
+    RgError { source: rg::Error },
 }
 
 type Result<T, E = Error> = std::result::Result<T, E>;
 
 fn run_app() -> Result<()> {
-    let _results = rg::run_rg(env::args().collect())
-        .context(RgError {})?;
+    let _results = rg::run_rg(env::args().collect()).context(RgError {})?;
     Ok(())
 }
 
