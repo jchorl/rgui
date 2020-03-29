@@ -13,7 +13,8 @@ pub enum Error {
 type Result<T, E = Error> = std::result::Result<T, E>;
 
 fn run_app() -> Result<()> {
-    let _results = rg::run_rg(env::args().collect()).context(RgError {})?;
+    let results = rg::run_rg(env::args().collect()).context(RgError {})?;
+    println!("{:?}", results);
     Ok(())
 }
 

@@ -87,7 +87,5 @@ fn parse_results(unparsed: String) -> Result<Vec<Match>, Error> {
         })
     }
 
-    println!("{:?}", matches);
-
     Ok(matches)
 }
