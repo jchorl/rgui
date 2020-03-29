@@ -1,3 +1,4 @@
+use serde::Deserialize;
 use snafu::{ensure, ErrorCompat, ResultExt, Snafu};
 use std::env;
 use std::process::Command;
@@ -20,9 +21,18 @@ enum Error {
         stdout: String,
         stderr: String,
     },
+    #[snafu(display("Failed to parse"))]
+    GrepResultsParseError {
+        source: serde_json::error::Error,
+    }
 }
 
 type Result<T, E = Error> = std::result::Result<T, E>;
+
+#[derive(Debug, PartialEq, Eq, Deserialize)]
+enum RipGrepLine {
+    Match {line_number: i32},
+}
 
 fn run_app() -> Result<()> {
     let grep_cmd = "rg";
@@ -39,9 +49,38 @@ fn run_app() -> Result<()> {
     ensure!(output.status.success(), CommandResultError {
         command: grep_cmd,
         args: grep_args,
-        stdout: String::from_utf8(output.stdout).expect("stdout not utf8"),
-        stderr: String::from_utf8(output.stderr).expect("stdout not utf8"),
+        stdout: String::from_utf8(output.stdout).unwrap(),
+        stderr: String::from_utf8(output.stderr).unwrap(),
     });
+
+    let unparsed = String::from_utf8(output.stdout).unwrap();
+    for s in unparsed.split("\n") {
+        // the last line may be empty
+        if s.is_empty() {
+            break;
+        }
+
+        let mut untyped: serde_json::Value = serde_json::from_str(s).unwrap();
+
+        // get the type
+        let type_ = {
+            let obj = untyped.as_object_mut().expect("object");
+            let type_ = obj.remove("type").expect("`type` field");
+            if let serde_json::Value::String(s) = type_ {
+                s
+            } else {
+                panic!("type field not a string");
+            }
+        };
+
+        // ignore non-match lines
+        if type_ != "match" {
+            continue;
+        }
+
+        println!("{}", s);
+        println!("{}", type_);
+    }
 
     Ok(())
 }
