@@ -8,7 +8,7 @@ mod rg;
 pub enum Error {
     #[snafu(display("rg failed"))]
     RgError {
-        source: rg::errors::Error,
+        source: rg::Error,
     }
 }
 
