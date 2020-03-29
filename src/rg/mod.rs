@@ -1,8 +1,6 @@
 use std::process::Command;
 use snafu::{ensure, ResultExt, Snafu};
 
-mod types;
-
 #[derive(Debug, Snafu)]
 pub enum Error {
     #[snafu(display("Command '{}' failed", command))]
@@ -34,7 +32,13 @@ pub enum Error {
     },
 }
 
-pub fn run_rg(args: Vec<String>) -> Result<String, Error> {
+#[derive(Debug)]
+pub struct Match {
+    file: String,
+    line_number: i64,
+}
+
+pub fn run_rg(args: Vec<String>) -> Result<Vec<Match>, Error> {
     let unparsed = run_cmd(args)?;
     let parsed = parse_results(unparsed)?;
     Ok(parsed)
@@ -62,6 +66,29 @@ fn run_cmd(args: Vec<String>) -> Result<String, Error> {
     Ok(single_str)
 }
 
-fn parse_results(unparsed: String) -> Result<String, Error> {
-    Ok(unparsed)
+fn parse_results(unparsed: String) -> Result<Vec<Match>, Error> {
+    let mut matches = Vec::new();
+
+    for s in unparsed.split("\n") {
+        // the last line may be empty
+        if s.is_empty() {
+            break;
+        }
+
+        let parsed: serde_json::Value = serde_json::from_str(s).context(ResultsParseError {})?;
+
+        // ignore non-matches
+        if parsed["type"] != "match" {
+            continue
+        }
+
+        matches.push(Match {
+            file: String::from(parsed["data"]["path"]["text"].as_str().unwrap()),
+            line_number: parsed["data"]["line_number"].as_i64().unwrap(),
+        })
+    }
+
+    println!("{:?}", matches);
+
+    Ok(matches)
 }
