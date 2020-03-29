@@ -14,8 +14,7 @@ pub enum Error {
 type Result<T, E = Error> = std::result::Result<T, E>;
 
 fn run_app() -> Result<()> {
-    // TODO use skip in args
-    let results = rg::run_rg(env::args().collect()).context(RgError {})?;
+    let results = rg::run_rg(env::args().skip(1).collect::<Vec<_>>()).context(RgError {})?;
 
     let result = &results[0];
     bat::display_file(&result.file);

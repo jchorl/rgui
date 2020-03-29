@@ -34,7 +34,6 @@ pub struct Match {
     pub line_number: i64,
 }
 
-// TODO take a reference
 pub fn run_rg(args: Vec<String>) -> Result<Vec<Match>, Error> {
     let unparsed = run_cmd(args)?;
     let parsed = parse_results(unparsed)?;
@@ -43,7 +42,7 @@ pub fn run_rg(args: Vec<String>) -> Result<Vec<Match>, Error> {
 
 fn run_cmd(args: Vec<String>) -> Result<String, Error> {
     let grep_cmd = "rg";
-    let mut grep_args_builder: Vec<String> = args[1..].iter().cloned().collect();
+    let mut grep_args_builder: Vec<String> = args.iter().cloned().collect();
     grep_args_builder.push("--json".to_string());
     let grep_args = &*grep_args_builder;
 
