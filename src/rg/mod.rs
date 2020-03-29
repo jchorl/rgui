@@ -29,12 +29,18 @@ pub enum Error {
     },
 
     #[snafu(display("Failed to parse"))]
-    GrepResultsParseError {
+    ResultsParseError {
         source: serde_json::error::Error,
     },
 }
 
 pub fn run_rg(args: Vec<String>) -> Result<String, Error> {
+    let unparsed = run_cmd(args)?;
+    let parsed = parse_results(unparsed)?;
+    Ok(parsed)
+}
+
+fn run_cmd(args: Vec<String>) -> Result<String, Error> {
     let grep_cmd = "rg";
     let mut grep_args_builder: Vec<String> = args[1..].iter().cloned().collect();
     grep_args_builder.push("--json".to_string());
@@ -54,4 +60,8 @@ pub fn run_rg(args: Vec<String>) -> Result<String, Error> {
 
     let single_str = String::from_utf8(output.stdout).context(NonUtf8Results {})?;
     Ok(single_str)
+}
+
+fn parse_results(unparsed: String) -> Result<String, Error> {
+    Ok(unparsed)
 }
