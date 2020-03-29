@@ -1,6 +1,7 @@
 use snafu::{ErrorCompat, ResultExt, Snafu};
 use std::env;
 
+mod bat;
 mod rg;
 
 #[derive(Debug, Snafu)]
@@ -13,8 +14,11 @@ pub enum Error {
 type Result<T, E = Error> = std::result::Result<T, E>;
 
 fn run_app() -> Result<()> {
+    // TODO use skip in args
     let results = rg::run_rg(env::args().collect()).context(RgError {})?;
-    println!("{:?}", results);
+
+    let result = &results[0];
+    bat::display_file(&result.file);
     Ok(())
 }
 

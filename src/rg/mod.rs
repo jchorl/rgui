@@ -30,10 +30,11 @@ pub enum Error {
 
 #[derive(Debug)]
 pub struct Match {
-    file: String,
-    line_number: i64,
+    pub file: String,
+    pub line_number: i64,
 }
 
+// TODO take a reference
 pub fn run_rg(args: Vec<String>) -> Result<Vec<Match>, Error> {
     let unparsed = run_cmd(args)?;
     let parsed = parse_results(unparsed)?;
