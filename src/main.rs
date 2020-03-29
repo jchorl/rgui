@@ -1,4 +1,4 @@
-use snafu::{ensure, ResultExt, Snafu};
+use snafu::{ensure, ErrorCompat, ResultExt, Snafu};
 use std::env;
 use std::process::Command;
 
@@ -9,10 +9,16 @@ enum Error {
         command: String,
         source: std::io::Error,
     },
-    #[snafu(display("Command '{} {:?}' failed", command, args))]
+    #[snafu(display("Command '{} {}' failed:\n\
+                    stdout:\n\
+                    {}\n\
+                    stderr:\n\
+                    {}", command, args.join(" "), stdout, stderr))]
     CommandResultError {
         command: String,
         args: Vec<String>,
+        stdout: String,
+        stderr: String,
     },
 }
 
@@ -30,7 +36,12 @@ fn run_app() -> Result<()> {
         .output()
         .context(CommandError { command: grep_cmd })?;
 
-    ensure!(output.status.success(), CommandResultError { command: grep_cmd, args: grep_args });
+    ensure!(output.status.success(), CommandResultError {
+        command: grep_cmd,
+        args: grep_args,
+        stdout: String::from_utf8(output.stdout).expect("stdout not utf8"),
+        stderr: String::from_utf8(output.stderr).expect("stdout not utf8"),
+    });
 
     Ok(())
 }
@@ -38,8 +49,11 @@ fn run_app() -> Result<()> {
 fn main() {
     std::process::exit(match run_app() {
         Ok(_) => 0,
-        Err(err) => {
-            eprintln!("error: {:?}", err);
+        Err(e) => {
+            eprintln!("An error occurred: {}", e);
+            if let Some(backtrace) = ErrorCompat::backtrace(&e) {
+                println!("{}", backtrace);
+            }
             1
         }
     });
