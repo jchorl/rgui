@@ -34,20 +34,18 @@ pub struct Match {
     pub line_number: i64,
 }
 
-pub fn run_rg(args: Vec<String>) -> Result<Vec<Match>, Error> {
-    let unparsed = run_cmd(args)?;
+pub fn run_rg(grep_args: Vec<String>) -> Result<Vec<Match>, Error> {
+    let unparsed = run_cmd(grep_args)?;
     let parsed = parse_results(unparsed)?;
     Ok(parsed)
 }
 
-fn run_cmd(args: Vec<String>) -> Result<String, Error> {
+fn run_cmd(mut grep_args: Vec<String>) -> Result<String, Error> {
     let grep_cmd = "rg";
-    let mut grep_args_builder: Vec<String> = args.iter().cloned().collect();
-    grep_args_builder.push("--json".to_string());
-    let grep_args = &*grep_args_builder;
+    grep_args.push("--json".to_string());
 
     let output = Command::new(grep_cmd)
-        .args(grep_args)
+        .args(&*grep_args)
         .output()
         .context(CommandError { command: grep_cmd })?;
 
