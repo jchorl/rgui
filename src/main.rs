@@ -1,33 +1,11 @@
 use serde::Deserialize;
-use snafu::{ensure, ErrorCompat, ResultExt, Snafu};
+use snafu::{ensure, ErrorCompat, ResultExt};
 use std::env;
 use std::process::Command;
 
-#[derive(Debug, Snafu)]
-enum Error {
-    #[snafu(display("Command '{}' failed", command))]
-    CommandError {
-        command: String,
-        source: std::io::Error,
-    },
-    #[snafu(display("Command '{} {}' failed:\n\
-                    stdout:\n\
-                    {}\n\
-                    stderr:\n\
-                    {}", command, args.join(" "), stdout, stderr))]
-    CommandResultError {
-        command: String,
-        args: Vec<String>,
-        stdout: String,
-        stderr: String,
-    },
-    #[snafu(display("Failed to parse"))]
-    GrepResultsParseError {
-        source: serde_json::error::Error,
-    }
-}
+mod errors;
 
-type Result<T, E = Error> = std::result::Result<T, E>;
+type Result<T, E = errors::Error> = std::result::Result<T, E>;
 
 #[derive(Debug, PartialEq, Eq, Deserialize)]
 enum RipGrepLine {
@@ -44,9 +22,9 @@ fn run_app() -> Result<()> {
     let output = Command::new(grep_cmd)
         .args(grep_args)
         .output()
-        .context(CommandError { command: grep_cmd })?;
+        .context(errors::CommandError { command: grep_cmd })?;
 
-    ensure!(output.status.success(), CommandResultError {
+    ensure!(output.status.success(), errors::CommandResultError {
         command: grep_cmd,
         args: grep_args,
         stdout: String::from_utf8(output.stdout).unwrap(),
