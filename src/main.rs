@@ -17,7 +17,7 @@ fn run_app() -> Result<()> {
     let results = rg::run_rg(env::args().skip(1).collect::<Vec<_>>()).context(RgError {})?;
 
     let result = &results[0];
-    bat::display_file(&result.file);
+    bat::display_file(&result.file, result.line_number);
     Ok(())
 }
 

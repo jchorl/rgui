@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bat = "^0.13.0"
+bat = { git = "https://github.com/jchorl/bat", rev = "5117845565a3087102e7f20de14762df96744be2" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 snafu = "^0.6.3"
