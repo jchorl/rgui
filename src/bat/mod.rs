@@ -5,7 +5,7 @@ use bat::{
 };
 use std::ffi::OsStr;
 
-pub fn display_file(filename: &String, line_number: i64) {
+pub fn display_file(filename: &String, line_number: i64) -> String {
     let mut output = Vec::new();
 
     let config = Config {
@@ -31,6 +31,5 @@ pub fn display_file(filename: &String, line_number: i64) {
 
     let controller = Controller::new(&config, &assets);
     controller.run_with_writer(&mut output, default_error_handler);
-    let output_str = String::from_utf8(output).expect("utf8");
-    println!("{}", output_str);
+    String::from_utf8(output).expect("utf8") // TODO make this return a result
 }

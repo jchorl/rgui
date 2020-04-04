@@ -28,7 +28,7 @@ pub enum Error {
     ResultsParseError { source: serde_json::error::Error },
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Match {
     pub file: String,
     pub line_number: i64,
