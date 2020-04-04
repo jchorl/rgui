@@ -11,5 +11,5 @@ bat = { git = "https://github.com/jchorl/bat", rev = "5117845565a3087102e7f20de1
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 snafu = "^0.6.3"
-tui = "0.8"
+tui = { git = "https://github.com/fdehau/tui-rs", rev = "867ba1fd8c1a3bc02457333a74a7023e5cd2a7e0" }
 termion = "1.5"

@@ -1,5 +1,8 @@
 use bat::{
-    config::{Config, InputFile, StyleComponent, StyleComponents, LineRange, LineRanges, HighlightedLineRanges},
+    config::{
+        Config, HighlightedLineRanges, InputFile, LineRange, LineRanges, StyleComponent,
+        StyleComponents,
+    },
     errors::default_error_handler,
     Controller, HighlightingAssets,
 };
@@ -10,16 +13,11 @@ pub fn display_file(filename: &String, line_number: i64) -> String {
 
     let config = Config {
         colored_output: false,
-        style_components: StyleComponents::new(&[
-            StyleComponent::Numbers,
-        ]),
-        highlighted_lines: HighlightedLineRanges(
-            LineRanges::from(
-                vec!(
-                    LineRange::from(&line_number.to_string()).expect("parsing line number"),
-                ),
-            )
-        ),
+        style_components: StyleComponents::new(&[StyleComponent::Numbers]),
+        highlighted_lines: HighlightedLineRanges(LineRanges::from(vec![LineRange::from(
+            &line_number.to_string(),
+        )
+        .expect("parsing line number")])),
         term_width: 100,
         files: vec![InputFile::Ordinary(OsStr::new(&filename))],
         ..Default::default()
