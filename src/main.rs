@@ -43,8 +43,8 @@ fn run_app() -> Result<()> {
             .margin(1)
             .constraints(
                 [
-                    Constraint::Percentage(50),
-                    Constraint::Percentage(50),
+                    Constraint::Min(50),
+                    Constraint::Percentage(80),
                 ].as_ref()
             )
             .split(f.size());
@@ -59,7 +59,6 @@ fn run_app() -> Result<()> {
         Paragraph::new([Text::raw(bat_text)].iter())
             .block(Block::default().title("Preview").borders(Borders::ALL))
             .alignment(Alignment::Left)
-            .wrap(true)
             .render(&mut f, chunks[1]);
     }).context(TerminalError {})?;
 

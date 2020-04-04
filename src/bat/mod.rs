@@ -9,11 +9,8 @@ pub fn display_file(filename: &String, line_number: i64) -> String {
     let mut output = Vec::new();
 
     let config = Config {
-        colored_output: true,
-        true_color: true,
+        colored_output: false,
         style_components: StyleComponents::new(&[
-            StyleComponent::Grid,
-            StyleComponent::Header,
             StyleComponent::Numbers,
         ]),
         highlighted_lines: HighlightedLineRanges(
