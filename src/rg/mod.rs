@@ -1,4 +1,5 @@
 use snafu::{ensure, ResultExt, Snafu};
+use std::convert::TryFrom;
 use std::process::Command;
 
 #[derive(Debug, Snafu)]
@@ -31,7 +32,7 @@ pub enum Error {
 #[derive(Debug, Clone)]
 pub struct Match {
     pub file: String,
-    pub line_number: i64,
+    pub line_number: u16,
 }
 
 pub fn run_rg(grep_args: Vec<String>) -> Result<Vec<Match>, Error> {
@@ -90,7 +91,7 @@ fn parse_results(unparsed: String) -> Result<Vec<Match>, Error> {
 
         matches.push(Match {
             file: String::from(parsed["data"]["path"]["text"].as_str().unwrap()),
-            line_number: parsed["data"]["line_number"].as_i64().unwrap(),
+            line_number: u16::try_from(parsed["data"]["line_number"].as_u64().unwrap()).unwrap(),
         })
     }
 

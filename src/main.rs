@@ -33,15 +33,32 @@ pub enum Error {
 
 type Result<T, E = Error> = std::result::Result<T, E>;
 
+enum Mode {
+    Files,
+    Preview
+}
+
 struct App {
     items: StatefulList<rg::Match>,
+    mode: Mode,
 }
 
 impl App {
     fn new(items: Vec<rg::Match>) -> App {
         App {
             items: StatefulList::with_items(items),
+            mode: Mode::Files,
         }
+    }
+
+    fn change_mode(&mut self, m: Mode) {
+        self.mode = m;
+    }
+
+    fn get_offset(&self) -> u16 {
+        let selected = self.items.state.selected().unwrap();
+        let result = &self.items.items[selected];
+        result.line_number - 1
     }
 
     fn get_file_text(&self) -> String {
@@ -92,6 +109,7 @@ fn run_app() -> Result<()> {
                 let prev_vec = vec![Text::raw(app.get_file_text())];
                 let paragraph = Paragraph::new(prev_vec.iter())
                     .block(Block::default().title("Preview").borders(Borders::ALL))
+                    .scroll(app.get_offset())
                     .alignment(Alignment::Left);
                 f.render_widget(paragraph, chunks[1]);
             })
@@ -103,10 +121,30 @@ fn run_app() -> Result<()> {
                     break;
                 }
                 Key::Char('j') => {
-                    app.items.next();
+                    match app.mode {
+                        Mode::Files => {
+                            app.items.next();
+                        },
+                        Mode::Preview => {
+                            println!("next");
+                        },
+                    }
                 }
                 Key::Char('k') => {
-                    app.items.previous();
+                    match app.mode {
+                        Mode::Files => {
+                            app.items.previous();
+                        },
+                        Mode::Preview => {
+                            println!("prev");
+                        },
+                    }
+                }
+                Key::Char('l') => {
+                    app.change_mode(Mode::Preview);
+                }
+                Key::Char('h') => {
+                    app.change_mode(Mode::Files);
                 }
                 _ => {}
             },

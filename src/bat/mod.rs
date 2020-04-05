@@ -8,7 +8,7 @@ use bat::{
 };
 use std::ffi::OsStr;
 
-pub fn display_file(filename: &String, line_number: i64) -> String {
+pub fn display_file(filename: &String, line_number: u16) -> String {
     let mut output = Vec::new();
 
     let config = Config {
