@@ -35,39 +35,80 @@ type Result<T, E = Error> = std::result::Result<T, E>;
 
 enum Mode {
     Files,
-    Preview
+    Preview,
 }
 
 struct App {
     items: StatefulList<rg::Match>,
     mode: Mode,
+    offset: u16,
+
+    last_file_name: Option<String>,
+    last_file_contents: Option<String>,
 }
 
 impl App {
     fn new(items: Vec<rg::Match>) -> App {
-        App {
+        let offset = items[0].line_number - 1;
+        let mut app = App {
             items: StatefulList::with_items(items),
             mode: Mode::Files,
-        }
+            offset: offset,
+
+            // cache files
+            last_file_name: None,
+            last_file_contents: None,
+        };
+        app.cache_preview();
+        app
     }
 
     fn change_mode(&mut self, m: Mode) {
         self.mode = m;
     }
 
-    fn get_offset(&self) -> u16 {
-        let selected = self.items.state.selected().unwrap();
-        let result = &self.items.items[selected];
-        result.line_number - 1
+    fn next_file(&mut self) {
+        self.items.next();
+        self.cache_preview();
     }
 
-    fn get_file_text(&self) -> String {
-        let selected = self.items.state.selected().unwrap();
+    fn prev_file(&mut self) {
+        self.items.previous();
+        self.cache_preview();
+    }
+
+    fn cache_preview(&mut self) {
+        let selected = self.items.state.selected().expect("getting selected");
         let result = &self.items.items[selected];
 
-        // might want to cache this
+        if let Some(cached_file) = &self.last_file_name {
+            if cached_file.as_str() == result.file.as_str() {
+                return;
+            }
+        }
+
         let contents = bat::display_file(&result.file, result.line_number);
-        String::from(contents)
+        self.last_file_name = Some(result.file.clone());
+        self.last_file_contents = Some(String::from(contents));
+        self.offset = result.line_number - 1;
+    }
+
+    fn inc_offset(&mut self) {
+        self.offset += 1;
+    }
+
+    fn dec_offset(&mut self) {
+        self.offset -= 1;
+    }
+
+    fn get_offset(&self) -> u16 {
+        self.offset
+    }
+
+    fn get_file_text(&self) -> &String {
+        self.last_file_contents
+            .as_ref()
+            .expect("getting file text from preview")
     }
 }
 
@@ -120,26 +161,22 @@ fn run_app() -> Result<()> {
                 Key::Char('q') => {
                     break;
                 }
-                Key::Char('j') => {
-                    match app.mode {
-                        Mode::Files => {
-                            app.items.next();
-                        },
-                        Mode::Preview => {
-                            println!("next");
-                        },
+                Key::Char('j') => match app.mode {
+                    Mode::Files => {
+                        app.next_file();
                     }
-                }
-                Key::Char('k') => {
-                    match app.mode {
-                        Mode::Files => {
-                            app.items.previous();
-                        },
-                        Mode::Preview => {
-                            println!("prev");
-                        },
+                    Mode::Preview => {
+                        app.inc_offset();
                     }
-                }
+                },
+                Key::Char('k') => match app.mode {
+                    Mode::Files => {
+                        app.prev_file();
+                    }
+                    Mode::Preview => {
+                        app.dec_offset();
+                    }
+                },
                 Key::Char('l') => {
                     app.change_mode(Mode::Preview);
                 }
