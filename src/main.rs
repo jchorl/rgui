@@ -47,6 +47,8 @@ impl App {
     fn get_file_text(&self) -> String {
         let selected = self.items.state.selected().unwrap();
         let result = &self.items.items[selected];
+
+        // might want to cache this
         let contents = bat::display_file(&result.file, result.line_number);
         String::from(contents)
     }
@@ -54,6 +56,10 @@ impl App {
 
 fn run_app() -> Result<()> {
     let results = rg::run_rg(env::args().skip(1).collect::<Vec<_>>()).context(RgError {})?;
+    if results.is_empty() {
+        println!("no results found!");
+        std::process::exit(1);
+    }
 
     let stdout = io::stdout().into_raw_mode().context(TerminalError {})?;
     let stdout = MouseTerminal::from(stdout);
