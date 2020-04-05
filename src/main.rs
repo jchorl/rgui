@@ -66,8 +66,6 @@ fn run_app() -> Result<()> {
 
     let events = Events::new();
 
-    let prev_vec = vec![Text::raw(app.get_file_text())];
-
     loop {
         terminal
             .draw(|mut f| {
@@ -85,6 +83,7 @@ fn run_app() -> Result<()> {
                     .highlight_symbol(">");
                 f.render_stateful_widget(items, chunks[0], &mut app.items.state);
 
+                let prev_vec = vec![Text::raw(app.get_file_text())];
                 let paragraph = Paragraph::new(prev_vec.iter())
                     .block(Block::default().title("Preview").borders(Borders::ALL))
                     .alignment(Alignment::Left);
