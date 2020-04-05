@@ -33,10 +33,27 @@ pub enum Error {
 
 type Result<T, E = Error> = std::result::Result<T, E>;
 
+struct App {
+    items: StatefulList<rg::Match>,
+}
+
+impl App {
+    fn new(items: Vec<rg::Match>) -> App {
+        App {
+            items: StatefulList::with_items(items),
+        }
+    }
+
+    fn get_file_text(&self) -> String {
+        let selected = self.items.state.selected().unwrap();
+        let result = &self.items.items[selected];
+        let contents = bat::display_file(&result.file, result.line_number);
+        String::from(contents)
+    }
+}
+
 fn run_app() -> Result<()> {
     let results = rg::run_rg(env::args().skip(1).collect::<Vec<_>>()).context(RgError {})?;
-
-    let bat_text = bat::display_file(&results[0].file, results[0].line_number);
 
     let stdout = io::stdout().into_raw_mode().context(TerminalError {})?;
     let stdout = MouseTerminal::from(stdout);
@@ -45,10 +62,11 @@ fn run_app() -> Result<()> {
     let mut terminal = Terminal::new(backend).context(TerminalError {})?;
     terminal.hide_cursor().context(TerminalError {})?;
 
-    let events = Events::new();
-    let bet_vec = vec![Text::raw(&bat_text)];
+    let mut app = App::new(results);
 
-    let mut items_list = StatefulList::with_items(results);
+    let events = Events::new();
+
+    let prev_vec = vec![Text::raw(app.get_file_text())];
 
     loop {
         terminal
@@ -59,15 +77,15 @@ fn run_app() -> Result<()> {
                     .constraints([Constraint::Min(50), Constraint::Percentage(80)].as_ref())
                     .split(f.size());
 
-                let items = items_list.items.iter().map(|i| Text::raw(&i.file));
+                let items = app.items.items.iter().map(|i| Text::raw(&i.file));
                 let items = List::new(items)
                     .block(Block::default().title("Results").borders(Borders::ALL))
                     .style(Style::default().fg(Color::White))
                     .highlight_style(Style::default().modifier(Modifier::BOLD))
                     .highlight_symbol(">");
-                f.render_stateful_widget(items, chunks[0], &mut items_list.state);
+                f.render_stateful_widget(items, chunks[0], &mut app.items.state);
 
-                let paragraph = Paragraph::new(bet_vec.iter())
+                let paragraph = Paragraph::new(prev_vec.iter())
                     .block(Block::default().title("Preview").borders(Borders::ALL))
                     .alignment(Alignment::Left);
                 f.render_widget(paragraph, chunks[1]);
@@ -80,10 +98,10 @@ fn run_app() -> Result<()> {
                     break;
                 }
                 Key::Char('j') => {
-                    items_list.next();
+                    app.items.next();
                 }
                 Key::Char('k') => {
-                    items_list.previous();
+                    app.items.previous();
                 }
                 _ => {}
             },
